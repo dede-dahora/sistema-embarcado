@@ -7,7 +7,6 @@ from matplotlib.animation import FuncAnimation
 
 class SistemaIrrigacao:
     def __init__(self):
-        # Configurações iniciais
         self.umidade_solo = 50  # % (valor inicial)
         self.umidade_minima = 30  # % abaixo do qual ativa irrigação
         self.tempo_irrigacao = 5  # segundos
