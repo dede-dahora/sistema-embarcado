@@ -1,99 +1,74 @@
 import random
 import time
-import sys
 
-class DispositivoMedico:
-    def __init__(self):
-        self.paciente = {
-            'frequencia_cardiaca': 72,
-            'pressao_arterial': (120, 80),
-            'oxigenacao': 98,
-            'temperatura': 36.5
-        }
-        self.alarmes = []
-        self.rodando = True
-
-    def simular_sinais_vitais(self):
-        """Simula variações nos sinais vitais do paciente"""
-        while self.rodando:
-            # Modifica os valores aleatoriamente dentro de faixas razoáveis
-            self.paciente['frequencia_cardiaca'] += random.randint(-2, 2)
-            self.paciente['pressao_arterial'] = (
-                self.paciente['pressao_arterial'][0] + random.randint(-3, 3),
-                self.paciente['pressao_arterial'][1] + random.randint(-2, 2)
+def dispositivo_medico():
+    # Valores iniciais
+    paciente = {
+        'freq_card': 72,
+        'pressao': (120, 80),
+        'oxigenio': 98,
+        'temp': 36.5
+    }
+    
+    # Limites normais
+    limites = {
+        'freq_min': 60,
+        'freq_max': 100,
+        'pressao_sis_max': 140,
+        'pressao_dia_max': 90,
+        'oxigenio_min': 95,
+        'temp_min': 36.0,
+        'temp_max': 37.5
+    }
+    
+    try:
+        while True:
+            # Atualiza os sinais vitais
+            paciente['freq_card'] += random.randint(-2, 2)
+            paciente['pressao'] = (
+                paciente['pressao'][0] + random.randint(-3, 3),
+                paciente['pressao'][1] + random.randint(-2, 2)
             )
-            self.paciente['oxigenacao'] += random.randint(-1, 1)
-            self.paciente['temperatura'] += random.uniform(-0.1, 0.1)
+            paciente['oxigenio'] += random.randint(-1, 1)
+            paciente['temp'] += random.uniform(-0.1, 0.1)
             
-            self.verificar_alarmes()
+            # Verifica alarmes
+            alarmes = []
+            if paciente['freq_card'] < limites['freq_min']:
+                alarmes.append("FREQUÊNCIA CARDÍACA BAIXA")
+            elif paciente['freq_card'] > limites['freq_max']:
+                alarmes.append("FREQUÊNCIA CARDÍACA ALTA")
+                
+            if paciente['pressao'][0] > limites['pressao_sis_max']:
+                alarmes.append("PRESSÃO SIS. ALTA")
+            if paciente['pressao'][1] > limites['pressao_dia_max']:
+                alarmes.append("PRESSÃO DIA. ALTA")
+                
+            if paciente['oxigenio'] < limites['oxigenio_min']:
+                alarmes.append("OXIGÊNIO BAIXO")
+                
+            if paciente['temp'] < limites['temp_min']:
+                alarmes.append("TEMPERATURA BAIXA")
+            elif paciente['temp'] > limites['temp_max']:
+                alarmes.append("TEMPERATURA ALTA")
+            
+            # Exibe os dados
+            print("\n" * 50)  # Limpa a tela
+            print("=== MONITOR MÉDICO ===")
+            print(f"Frequência Cardíaca: {paciente['freq_card']} bpm")
+            print(f"Pressão Arterial: {paciente['pressao'][0]}/{paciente['pressao'][1]} mmHg")
+            print(f"Oxigenação: {paciente['oxigenio']}%")
+            print(f"Temperatura: {paciente['temp']:.1f}°C")
+            
+            if alarmes:
+                print("\nALARMES:")
+                for alarme in alarmes:
+                    print(f"⚠ {alarme}")
+            
             time.sleep(1)
+            
+    except KeyboardInterrupt:
+        print("\nMonitoramento encerrado.")
 
-    def verificar_alarmes(self):
-        """Verifica se algum parâmetro está fora da faixa normal"""
-        self.alarmes = []  # Limpa alarmes anteriores
-        
-        # Verifica frequência cardíaca
-        if self.paciente['frequencia_cardiaca'] < 60:
-            self.alarmes.append("Bradicardia detectada!")
-        elif self.paciente['frequencia_cardiaca'] > 100:
-            self.alarmes.append("Taquicardia detectada!")
-            
-        # Verifica pressão arterial
-        if self.paciente['pressao_arterial'][0] > 140:
-            self.alarmes.append("Hipertensão sistólica!")
-        if self.paciente['pressao_arterial'][1] > 90:
-            self.alarmes.append("Hipertensão diastólica!")
-            
-        # Verifica oxigenação
-        if self.paciente['oxigenacao'] < 95:
-            self.alarmes.append("Hipoxemia detectada!")
-            
-        # Verifica temperatura
-        if self.paciente['temperatura'] > 37.5:
-            self.alarmes.append("Febre detectada!")
-        elif self.paciente['temperatura'] < 36.0:
-            self.alarmes.append("Hipotermia detectada!")
-
-    def exibir_painel(self):
-        """Exibe os sinais vitais em um painel simples"""
-        while self.rodando:
-            print("\n" * 50)  # Limpa a tela (simplificado)
-            print("=== MONITOR MÉDICO SIMPLES ===")
-            print(f"Frequência Cardíaca: {self.paciente['frequencia_cardiaca']} bpm")
-            print(f"Pressão Arterial: {self.paciente['pressao_arterial'][0]}/{self.paciente['pressao_arterial'][1]} mmHg")
-            print(f"Oxigenação: {self.paciente['oxigenacao']}%")
-            print(f"Temperatura: {self.paciente['temperatura']:.1f}°C")
-            
-            # Mostra alarmes se houver
-            if self.alarmes:
-                print("\n=== ALARMES ===")
-                for alarme in self.alarmes:
-                    print(f"! {alarme} !")
-            
-            time.sleep(0.5)
-
-    def executar(self):
-        """Inicia a simulação"""
-        try:
-            # Inicia a simulação em threads separadas
-            import threading
-            sim_thread = threading.Thread(target=self.simular_sinais_vitais)
-            disp_thread = threading.Thread(target=self.exibir_painel)
-            
-            sim_thread.start()
-            disp_thread.start()
-            
-            # Aguarda até que o usuário pressione Enter para sair
-            input("Pressione Enter para parar o monitoramento...\n")
-            self.rodando = False
-            
-            sim_thread.join()
-            disp_thread.join()
-            
-        except KeyboardInterrupt:
-            self.rodando = False
-            print("\nSistema desligado.")
-
-if __name__ == "__main__":
-    dispositivo = DispositivoMedico()
-    dispositivo.executar()
+# Inicia o sistema
+dispositivo_medico()
